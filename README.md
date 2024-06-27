@@ -19,6 +19,8 @@ This template as of 6/17/2024 features:
 2. Open this project in Android Studio.
 3. If it isn't enabled already, enable Dart in the configuration.
 4. Install the dependencies found in `pubspec.yaml`.
+5. Make sure that the app runs.
+6. Create a Firebase server and [follow the instructions to link the Firebase account to this project](https://firebase.google.com/docs/flutter/setup) (don't use the one that the project comes with)
 
 ### What's There
 The pages for this application are located in `lib\pages`.
