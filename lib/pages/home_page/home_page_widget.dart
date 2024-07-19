@@ -65,7 +65,21 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           top: true,
           child: Column(
             mainAxisSize: MainAxisSize.max,
-            children: [],
+            children: [
+              Center(
+                  child: Text("Todays date",style: TextStyle(fontSize: 20),),
+              ),
+              Center(child: Text(DateTime.now().month.toString()+"/"+DateTime.now().day.toString(),style: TextStyle(fontSize: 20),)),
+              Row(
+                children: [
+                  Container(
+                    height: 150,
+                    width: 150,
+                    color: Colors.yellow,
+                  )
+                ],
+              ),
+            ],
           ),
         ),
       ),

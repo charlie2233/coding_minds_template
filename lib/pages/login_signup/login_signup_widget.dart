@@ -200,7 +200,7 @@ class _LoginSignupWidgetState extends State<LoginSignupWidget>
                 ),
                 alignment: AlignmentDirectional(0.0, 0.0),
                 child: Text(
-                  'Counseling App',
+                  'Home Counselor',
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                         fontFamily: 'Poppins',
                         fontSize: 40.0,
