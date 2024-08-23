@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "1021853751707",
-    "project_id": "cmtemplate",
-    "storage_bucket": "cmtemplate.appspot.com"
+    "project_number": "259039186141",
+    "firebase_url": "https://counselor-appp-default-rtdb.firebaseio.com",
+    "project_id": "counselor-appp",
+    "storage_bucket": "counselor-appp.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1021853751707:android:5ab725d31b34d17880693e",
+        "mobilesdk_app_id": "1:259039186141:android:d6968e7c1475fb320b9f34",
         "android_client_info": {
           "package_name": "cm.codingmindstemplate"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAGAbaHK_9hbArhGLKZn2w4flm108O-vgU"
+          "current_key": "AIzaSyABMxy_rnz8EkpWwe63fzNSJWsRSYDZjqc"
         }
       ],
       "services": {
