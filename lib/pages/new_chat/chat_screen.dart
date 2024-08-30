@@ -10,11 +10,20 @@ class chat_page extends StatefulWidget {
   @override
   State<chat_page> createState() => _chat_pageState();
 }
-Future <void> setup() async {
-  OpenAI.apiKey= CHATGPT_APIKEY;
-  OpenAI.requestsTimeOut=Duration(seconds: 5);
-}
+
 class _chat_pageState extends State<chat_page> {
+  Future <String> setup() async {
+    OpenAI.apiKey= CHATGPT_APIKEY;
+    OpenAI.requestsTimeOut=Duration(seconds: 5);
+    if(!await checkIfUserMessagesExisits()) {
+      await createUserMessage();
+      await createAIMessage();
+    }
+    messages = await readUserMessage();
+    messages.addAll(await readAIMessage());
+    return "done";
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -32,7 +41,7 @@ class _chat_pageState extends State<chat_page> {
     firstName: 'AI',
     lastName: 'Counselor',
   );
-  List<ChatMessage> messages = <ChatMessage>[];
+  late List<ChatMessage> messages;
   // the system message that will be sent to the request.
   final systemMessage = OpenAIChatCompletionChoiceMessageModel(
     content: [
@@ -45,22 +54,31 @@ class _chat_pageState extends State<chat_page> {
   List<ChatUser> typingUsers = <ChatUser>[];
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: Icon(Icons.chat),
-        backgroundColor: Colors.green,
-        title: Text("AI Counselor Chat"),
-      ),
-      body: DashChat(
-        typingUsers: typingUsers,
-        currentUser: user,
-        onSend: (ChatMessage m) {
-          // addUserMessage(m.text);
-          // getChatMessage(m);
-          sendMessage(m);
-        },
-        messages: messages,
-      ),
+    return FutureBuilder(
+      future: setup(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData){
+          return Scaffold(
+            appBar: AppBar(
+              leading: Icon(Icons.chat),
+              backgroundColor: Colors.green,
+              title: Text("AI Counselor Chat"),
+            ),
+            body: DashChat(
+              typingUsers: typingUsers,
+              currentUser: user,
+              onSend: (ChatMessage m) async {
+                await sendMessage(m);
+              },
+              messages: messages,
+            ),
+          );
+        }
+        else{
+          return Center(child: CircularProgressIndicator());
+        }
+
+      }
     );
   }
   Future<void> getChatMessage(ChatMessage m) async {
@@ -114,23 +132,72 @@ Future<bool> checkIfUserMessagesExisits() async{
   Future<void> createUserMessage() async {
     final userDocument = FirebaseFirestore.instance.collection('users_ai_chat').doc(auth.currentUser?.uid);
     FirebaseFirestore.instance.runTransaction((transaction) async{
-      await transaction.set(userDocument, {'users':{}});
+      await transaction.set(userDocument, {'user':{}});
     }).then(
         (value) => print("Success"),
       onError: (e) =>print("error: $e")
     );
   }
-
+  Future<void> createAIMessage() async {
+    final userDocument = FirebaseFirestore.instance.collection('users_ai_chat').doc(auth.currentUser?.uid);
+    FirebaseFirestore.instance.runTransaction((transaction) async{
+      await transaction.set(userDocument, {'AI':{}});
+    }).then(
+            (value) => print("Success"),
+        onError: (e) =>print("error: $e")
+    );
+  }
   Future<void> sendMessage(ChatMessage m) async{
     if(await checkIfUserMessagesExisits()==false){
-      createUserMessage();
+      await createUserMessage();
     }
-    addUserMessage(m.text);
+    await addUserMessage(m.text);
+    await getChatMessage(m);
   }
+Future<List<ChatMessage>> readUserMessage() async {
+    List<ChatMessage> allOurMessages = [];
+    if(await checkIfUserMessagesExisits()==false){
+      return allOurMessages;
+    }
+  final userMessages = FirebaseFirestore.instance.collection('users_ai_chat').doc(auth.currentUser?.uid);
+  Map<String, dynamic> messagesFromUser = {};
+
+  await userMessages.get().then(
+  (DocumentSnapshot doc) {
+  final data = doc.data() as Map<String, dynamic>;
+  messagesFromUser = data["user"];
+  },
+  onError: (e) => print("Error getting document: $e"),
+  );
+  messagesFromUser.forEach((k,v){
+      ChatMessage temp = ChatMessage(user : user, createdAt: DateTime.parse(k),text: v);
+      allOurMessages.add(temp);
+    });
+  return allOurMessages;
+}
 
 
+  Future<List<ChatMessage>> readAIMessage() async {
+    List<ChatMessage> allOurMessages = [];
+    if(await checkIfUserMessagesExisits()==false){
+      return allOurMessages;
+    }
+    final userMessages = FirebaseFirestore.instance.collection('users_ai_chat').doc(auth.currentUser?.uid);
+    Map<String, dynamic> messagesFromUser = {};
 
-
+    await userMessages.get().then(
+          (DocumentSnapshot doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        messagesFromUser = data["AI"];
+      },
+      onError: (e) => print("Error getting document: $e"),
+    );
+    messagesFromUser.forEach((k,v){
+      ChatMessage temp = ChatMessage(user : chatGPTuser, createdAt: DateTime.parse(k),text: v);
+      allOurMessages.add(temp);
+    });
+    return allOurMessages;
+  }
 
 
   Future<void> addUserMessage(String message) async {
@@ -146,5 +213,19 @@ Future<bool> checkIfUserMessagesExisits() async{
     );
     messagesFromUser[DateTime.now().toString()]=message;
     return userMessages.update({"user":messagesFromUser});
+  }
+  Future<void> addAIMessage(String message) async {
+    final userMessages = FirebaseFirestore.instance.collection('users_ai_chat').doc(auth.currentUser?.uid);
+    Map<String, dynamic> messagesFromUser = {};
+
+    await userMessages.get().then(
+          (DocumentSnapshot doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        messagesFromUser = data["AI"];
+      },
+      onError: (e) => print("Error getting document: $e"),
+    );
+    messagesFromUser[DateTime.now().toString()]=message;
+    return userMessages.update({"AI":messagesFromUser});
   }
 }
