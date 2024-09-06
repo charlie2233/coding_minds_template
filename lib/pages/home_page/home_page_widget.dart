@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
+import '../schools/schools_page.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -82,6 +83,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         GestureDetector(
                           onTap: (){
                             print ("Schools");
+                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => schools_page()));
                           },
                           child: Container(
                             height: 150,

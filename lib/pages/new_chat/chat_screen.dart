@@ -21,6 +21,7 @@ class _chat_pageState extends State<chat_page> {
     }
     messages = await readUserMessage();
     messages.addAll(await readAIMessage());
+    messages.sort((b,a) => a.createdAt.compareTo(b.createdAt));
     return "done";
   }
 
@@ -37,7 +38,7 @@ class _chat_pageState extends State<chat_page> {
   );
  final FirebaseAuth auth = FirebaseAuth.instance;
   ChatUser chatGPTuser = ChatUser(
-    id: '1',
+    id: '2',
     firstName: 'AI',
     lastName: 'Counselor',
   );
@@ -114,6 +115,7 @@ class _chat_pageState extends State<chat_page> {
       temperature: 0.2,
       maxTokens: 200,
     );
+    await addAIMessage(chatCompletion.choices.first.message.toString());
     setState(() {
       messages.insert(0, ChatMessage(user: chatGPTuser, createdAt: DateTime.now(),text: chatCompletion.choices.first.message.toString()));
       typingUsers.remove(chatGPTuser);
@@ -132,7 +134,7 @@ Future<bool> checkIfUserMessagesExisits() async{
   Future<void> createUserMessage() async {
     final userDocument = FirebaseFirestore.instance.collection('users_ai_chat').doc(auth.currentUser?.uid);
     FirebaseFirestore.instance.runTransaction((transaction) async{
-      await transaction.set(userDocument, {'user':{}});
+      await transaction.set(userDocument, {'user':{}}, SetOptions(merge: true));
     }).then(
         (value) => print("Success"),
       onError: (e) =>print("error: $e")
@@ -141,7 +143,7 @@ Future<bool> checkIfUserMessagesExisits() async{
   Future<void> createAIMessage() async {
     final userDocument = FirebaseFirestore.instance.collection('users_ai_chat').doc(auth.currentUser?.uid);
     FirebaseFirestore.instance.runTransaction((transaction) async{
-      await transaction.set(userDocument, {'AI':{}});
+      await transaction.set(userDocument, {'AI':{}}, SetOptions(merge: true));
     }).then(
             (value) => print("Success"),
         onError: (e) =>print("error: $e")
